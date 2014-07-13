@@ -4,6 +4,13 @@
 // npm install oauth
 // npm install jsonfile
 
+
+var openCorp = require('./openCorp');
+
+
+
+
+var http = require('http');
 var express = require('express');
 var session = require('express-session')
 var cookieParser = require('cookie-parser')
@@ -17,6 +24,16 @@ var _openbankConsumerKey = "";
 var _openbankConsumerSecret = "";
 
 var consumer = null;
+
+
+
+
+
+
+
+
+
+
 
 var file = 'credentials.json';
 jf.readFile(file, function(err, obj) {
@@ -65,15 +82,31 @@ app.get('/callback', function(req, res){
 
 
 app.get('/signed_in', function(req, res){
-	res.send('Signing in by OAuth worked. Now you can do API calls on private data like this one: <br><a href="/getBanks">Get private banks</a>')
+	res.send('Signing in by OAuth worked. Now you can do API calls on private data like this one: <br><a href="/getBanks">Get private banks</a>');
 });
 
 app.get('/getBanks', function(req, res){
 	consumer.get("https://apisandbox.openbankproject.com/obp/v1.2/banks/rbs/accounts/private", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
 		var parsedData = JSON.parse(data);
-		res.send(parsedData)
+		res.send(parsedData);
 	});
 });
+
+var url = require('url');
+
+app.get('/searchBank', function(req, res){
+	var url_parts = url.parse(req.url, true);
+	var query = url_parts.query;
+	
+
+	openCorp.search_bank(query['name'], function(result){
+		res.send(result);
+	}, function(error){
+		res.send(error);
+	});
+
+});
+	
 
 
 app.get('*', function(req, res){
