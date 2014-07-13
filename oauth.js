@@ -69,7 +69,7 @@ app.get('/signed_in', function(req, res){
 });
 
 app.get('/getAccount', function(req, res){
-	consumer.get("https://apisandbox.openbankproject.com/obp/v1.2/banks/rbs/accounts/main/owner/transactions", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
+	consumer.get("https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/main/owner/transactions", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
 		var parsedData = JSON.parse(data);
 		var counterparties = parsedData.transactions.map(function(t) {
 			return t.other_account.holder.name;
