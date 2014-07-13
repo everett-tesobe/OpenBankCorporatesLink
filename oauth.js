@@ -90,12 +90,13 @@ app.get('/getAccount', function(req, res){
 		var parsedData = JSON.parse(data);
 	
 		var counterparties = parsedData.transactions.map(function(t) {
-			return t.other_account.holder.name;
+			var result = {
+			  name: t.other_account.holder.name,
+			  url: t.other_account.metadata.open_corporates_URL,
+			  jurisdiction: t.other_account.bank.national_identifier,
+      };
 		});
 		res.send(counterparties)
-
-
-		
 	});
 });
 
