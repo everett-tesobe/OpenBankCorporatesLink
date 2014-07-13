@@ -82,13 +82,20 @@ app.get('/callback', function(req, res){
 
 
 app.get('/signed_in', function(req, res){
-	res.send('Signing in by OAuth worked. Now you can do API calls on private data like this one: <br><a href="/getBanks">Get private banks</a>');
+	res.send('Thank you for logging in! <br><a href="/getAccount">Account transactions</a>')
 });
 
-app.get('/getBanks', function(req, res){
-	consumer.get("https://apisandbox.openbankproject.com/obp/v1.2/banks/rbs/accounts/private", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
+app.get('/getAccount', function(req, res){
+	consumer.get("https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/main/owner/transactions", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
 		var parsedData = JSON.parse(data);
-		res.send(parsedData);
+	
+		var counterparties = parsedData.transactions.map(function(t) {
+			return t.other_account.holder.name;
+		});
+		res.send(counterparties)
+
+
+		
 	});
 });
 
@@ -104,7 +111,7 @@ app.get('/searchBank', function(req, res){
 	}, function(error){
 		res.send(error);
 	});
-
+	
 });
 	
 
