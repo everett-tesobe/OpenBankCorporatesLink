@@ -2,22 +2,30 @@
 // npm install express-session
 // npm install cookie-parser
 // npm install oauth
+// npm install jsonfile
 
 var express = require('express');
 var session = require('express-session')
 var cookieParser = require('cookie-parser')
 var util = require('util');
 var oauth = require('oauth');
+var jf = require('jsonfile');
  
 var app = express();
- 
 
-// To get the values for the following fields, please register your client here: 
-// https://apisandbox.openbankproject.com/consumer-registration
-var _openbankConsumerKey = "TODO";
-var _openbankConsumerSecret = "TODO";
- 
-var consumer = new oauth.OAuth(
+var _openbankConsumerKey = "";
+var _openbankConsumerSecret = "";
+
+var consumer = null;
+
+var file = 'credentials.json';
+jf.readFile(file, function(err, obj) {
+
+  //hacky callback fun - don't load the page until this executes please!
+  _openbankConsumerKey = obj.consumer;
+  _openbankConsumerSecret = obj.secret;
+
+  consumer =  new oauth.OAuth(
   'https://apisandbox.openbankproject.com/oauth/initiate',
   'https://apisandbox.openbankproject.com/oauth/token',
   _openbankConsumerKey,
@@ -25,6 +33,7 @@ var consumer = new oauth.OAuth(
   '1.0', 
   'http://127.0.0.1:8080/callback', 
   'HMAC-SHA1');
+});
  
 app.use(cookieParser());
 app.use(session({ secret: "very secret" }));
