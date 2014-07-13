@@ -17,25 +17,13 @@ var cookieParser = require('cookie-parser')
 var util = require('util');
 var oauth = require('oauth');
 var jf = require('jsonfile');
- 
-var app = express();
 
+var app = express();
 var _openbankConsumerKey = "";
 var _openbankConsumerSecret = "";
-
 var consumer = null;
-
-
-
-
-
-
-
-
-
-
-
 var file = 'credentials.json';
+
 jf.readFile(file, function(err, obj) {
 
   //hacky callback fun - don't load the page until this executes please!
@@ -57,7 +45,7 @@ app.use(session({ secret: "very secret" }));
 
 app.get('/connect', function(req, res){
 	consumer.getOAuthRequestToken(function(error, oauthToken, oauthTokenSecret, results){
-		if (error) {
+    if (error) {
 			res.send("Error getting OAuth request token : " + util.inspect(error), 500);
 		} else {
 			req.session.oauthRequestToken = oauthToken;
@@ -92,21 +80,17 @@ app.get('/getAccount', function(req, res){
 		var counterparties = parsedData.transactions.map(function(t) {
 			return t.other_account.holder.name;
 		});
-		res.send(counterparties)
-
-
-		
+		res.send(counterparties)		
 	});
 });
+
 
 var url = require('url');
 
 app.get('/searchBank', function(req, res){
 	var url_parts = url.parse(req.url, true);
 	var query = url_parts.query;
-	
-
-	openCorp.search_bank(query['name'], function(result){
+	openCorp.search_bank(query['query'], function(result){
 		res.send(result);
 	}, function(error){
 		res.send(error);
