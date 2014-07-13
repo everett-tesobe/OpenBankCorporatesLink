@@ -143,7 +143,7 @@ app.get('/accountList', function(req, res){
 
 });
 
-app.get('*', function(req, res){
+app.get('/', function(req, res){
   res.redirect('/connect');
 });
  
