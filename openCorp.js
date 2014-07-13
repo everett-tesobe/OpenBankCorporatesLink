@@ -1,33 +1,27 @@
-
-
 var http = require('http');
+var http = require('follow-redirects').http;
 
 module.exports = {
 
-	search_bank: function(bankName, callbackResult, callbackError){
-		var options = {
-		  host: 'api.opencorporates.com',
-		  port: 80,
+  search_bank: function(bankName, callbackResult, callbackError){
+    var req_url = "http://opencorporates.com/reconcile?query=" + encodeURIComponent(bankName);
+    
+    http.get(req_url, function(res) {
+      console.log(res.statusCode);
+      var body = '';
+      res.on('data', function(chunk) {
+          body += chunk;
+      });
 
-		  path: '/v0.3/companies/search?q=' + encodeURIComponent(bankName) + '&format=json'
-		  //path: '/v0.3/companies/search?q=barclays+bank&format=json'
-		};
+      res.on('end', function() {
+        var data = JSON.parse(body)
+        callbackResult(data.result);
+      });
 
-		http.get(options, function(res) {
-		    var body = '';
+    }).on('error', function(e) {
+          console.log("Got error: ", e);
+    });
 
-		    res.on('data', function(chunk) {
-		        body += chunk;
-		    });
-
-		    res.on('end', function() {
-		        var data = JSON.parse(body)
-		        callbackResult(data);
-		    });
-		}).on('error', function(e) {
-		      console.log("Got error: ", e);
-		});
-
-	}
+  }
 
 };
