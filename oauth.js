@@ -6,7 +6,7 @@
 
 
 var openCorp = require('./openCorp');
-
+var fs = require('fs');
 
 
 
@@ -116,8 +116,24 @@ app.get('/searchBank', function(req, res){
 	
 
 
+
+
+
+app.get('/accountList', function(req, res){
+	fs.readFile('./webUI/list.html', function (err, html) {
+	    if (err) {
+	        throw err; 
+	    }       
+	    res.writeHeader(200, {"Content-Type": "text/html"});  
+	    res.write(html);  
+	    res.end();  
+	});
+});
+
 app.get('*', function(req, res){
 	res.redirect('/connect');
 });
  
 app.listen(8080);
+
+
