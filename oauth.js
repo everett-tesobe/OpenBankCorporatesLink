@@ -6,6 +6,7 @@
 
 
 var openCorp = require('./openCorp');
+var openToken = require('./oauthToken');
 var fs = require('fs');
 
 
@@ -75,7 +76,10 @@ app.get('/callback', function(req, res){
 			res.send("Error getting OAuth access token : " + util.inspect(error) + "["+oauthAccessToken+"]"+ "["+oauthAccessTokenSecret+"]"+ "["+util.inspect(results)+"]", 500);
 		} else {
 			req.session.oauthAccessToken = oauthAccessToken;
-			req.session.oauthAccessTokenSecret = oauthAccessTokenSecret; 
+			req.session.oauthAccessTokenSecret = oauthAccessTokenSecret;
+      
+      openToken.saveToken(jf, oauthAccessToken, oauthAccessTokenSecret);
+       
 			res.redirect('/signed_in');
 		}
 	});
@@ -87,19 +91,29 @@ app.get('/signed_in', function(req, res){
 });
 
 app.get('/getAccount', function(req, res){
-	consumer.get("https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/main/owner/transactions", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
-		var parsedData = JSON.parse(data);
-	
-		var counterparties = parsedData.transactions.map(function(t) {
-			var result = {
-			  name: t.other_account.holder.name,
-			  url: t.other_account.metadata.open_corporates_URL,
-			  jurisdiction: t.other_account.bank.national_identifier,
-      };
-      return result;
-		});
-		res.send(counterparties)		
-	});
+
+  var sendResponse = function(){
+    consumer.get("https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/main/owner/transactions", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
+    	var parsedData = JSON.parse(data);
+    
+    	var counterparties = parsedData.transactions.map(function(t) {
+    		var result = {
+    		  name: t.other_account.holder.name,
+    		  url: t.other_account.metadata.open_corporates_URL,
+    		  jurisdiction: t.other_account.bank.national_identifier,
+        };
+        return result;
+    	});
+    	res.send(counterparties)		
+    });
+  };
+
+ if (!req.session.oauthAccessToken){
+    openToken.getToken(jf, req, sendResponse);
+  } else {
+    sendResponse();
+  }
+
 });
 
 
@@ -122,14 +136,23 @@ app.get('/searchBank', function(req, res){
 
 
 app.get('/accountList', function(req, res){
-	fs.readFile('./webUI/list.html', function (err, html) {
-	    if (err) {
-	        throw err; 
-	    }       
-	    res.writeHeader(200, {"Content-Type": "text/html"});  
-	    res.write(html);  
-	    res.end();  
-	});
+  var sendResponse = function(){
+  	fs.readFile('./webUI/list.html', function (err, html) {
+      if (err) {
+          throw err; 
+      }       
+      res.writeHeader(200, {"Content-Type": "text/html"});  
+      res.write(html);  
+      res.end();  
+  	 });
+  }; 
+
+  if (!req.session.oauthAccessToken){
+    openToken.getToken(jf, req, sendResponse);
+  } else {
+    sendResponse();
+  }
+
 });
 
 app.get('*', function(req, res){
