@@ -121,6 +121,7 @@ app.get('/getAccount', function(req, res){
           name: t.other_account.holder.name,
           url: t.other_account.metadata.open_corporates_URL,
           jurisdiction: t.other_account.bank.national_identifier,
+          id: t.other_account.id
         };
         db.get_suggestion(fs, sqlite3, result.name, function(compUrl){
           if (compUrl){
@@ -189,10 +190,10 @@ app.get('/accountList', function(req, res){
 });
 
 // write into Open Corporte URL Field
-app.get('/writeOCURLField', function(req, res){	
+app.post('/writeOCURLField', function(req, res){	
   
-  	// if (request.method != 'POST') 
-  	// 	return;
+  	if (req.method != 'POST') 
+  	 	return;
 
 	// TODO: get this from the req!
 	var ACCOUNT_ID = "main";

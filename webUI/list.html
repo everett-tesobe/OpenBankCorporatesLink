@@ -72,7 +72,7 @@
         $.each(data, function(i) {
           var t = data[i];
           items.push(
-            '<div class="transaction-wrapper"> <a href="#" class="transaction">' + t.name +  '</a></div>'
+            '<div class="transaction-wrapper"> <a href="#" class="transaction" other_id="'+t.id+'">' + t.name +  '</a></div>'
             );
         });
         $('#transactions').append(items.join(' '));
@@ -91,12 +91,42 @@
             else {
               $.each(data, function(i) {
                 var candidate = data[i];
+
                 $('#candidates-list').append(
-                  '<p><a target="_blank" href="' + 
+                  '<p>' +
+                  
+                  '<a target="_blank" href="' + 
                   candidate.uri + '">' + 
-                  candidate.name + '</a></p>'
-                  );
+                  candidate.name + '</a>'  
+                  ).append($("<span>").click(function(e){
+                  	alert('hi');
+                  	
+	
+                  	params = {};
+
+                  	params.ACCOUNT_ID = "main";
+                  	params.VIEW_ID = "owner";
+					params.OTHER_ACCOUNT_ID = $this.attr('other_id');
+					params.queryUrl = candidate.uri;
+
+					
+					var paramJSON = JSON.stringify(params);
+
+					
+					
+					$.ajax({
+					    url: "/writeOCURLField",
+					    data: paramJSON,
+					    type: "POST",
+					    dataType: "application/json"
+					});
+
+					
+
+                  }).html('SELECT'));
+
               });  
+
             $("#loading").hide();           
             }
 
