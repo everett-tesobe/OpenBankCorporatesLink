@@ -188,10 +188,69 @@ app.get('/accountList', function(req, res){
 
 });
 
+// write into Open Corporte URL Field
+app.get('/writeOCURLField', function(req, res){	
+  
+  	// if (request.method != 'POST') 
+  	// 	return;
+
+	// TODO: get this from the req!
+	var ACCOUNT_ID = "main";
+	var VIEW_ID = "owner";
+	var OTHER_ACCOUNT_ID = "52ef858cca8aa4fe2d46d3c9";
+	var queryUrl = "http://google.com";
+
+	// get post reqest data 
+	// ACCOUNT_ID = req.body.ACCOUNT_ID;
+	// VIEW_ID = req.body.VIEW_ID;
+	// OTHER_ACCOUNT_ID = req.body.OTHER_ACCOUNT_ID;
+	// queryUrl = req.body.queryUrl;
+
+
+	//var body = "{'open_corporates_URL':'" + queryUrl +"'}";
+	var body = JSON.stringify({"open_corporates_URL": queryUrl});
+
+	// An object of options to indicate where to post to
+	// var post_options = {
+	//   host: 'https://apisandbox.openbankproject.com',
+	//   port: '80',
+	//   path: '/banks/rbs/accounts/main/owner/other_accounts/52ef858cca8aa4fe2d46d3c9/metadata/open_corporates_url',
+	//   method: 'POST',
+	//   headers: {
+	//       'Content-Type': 'application/json',
+	//       'Content-Length': body.length
+	//   }
+	// };
+
+
+	// Set up the request
+	
+
+	//var url = 'https://apisandbox.openbankproject.com/banks/rbs/accounts/main/owner/other_accounts/52ef858cca8aa4fe2d46d3c9/open_corporates_url';
+	var url = 'https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/' + 
+				ACCOUNT_ID + 
+				'/' + 
+				VIEW_ID + 
+				'/other_accounts/' + 
+				OTHER_ACCOUNT_ID +
+				'/open_corporates_url';
+
+
+	consumer.post(url, 
+				 req.session.oauthAccessToken, 
+				 req.session.oauthAccessTokenSecret, 
+				 body, 
+				 'application/json; charset=utf-8', 
+				 function(error,data, response) {
+					res.send(data);
+				});
+});
+ 
 app.get('*', function(req, res){
   res.redirect('/connect');
 });
- 
+
+
 app.listen(8080);
 
 
