@@ -1,0 +1,40 @@
+<html>
+
+<head>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/themes/smoothness/jquery-ui.css" />
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
+
+
+<link rel="stylesheet" href="//cdn.datatables.net/1.10.0/css/jquery.dataTables.css" />
+<script src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
+
+
+</head>
+
+
+
+
+<body>
+
+
+<table id='account_list' />
+
+</body>
+
+
+<script>
+$(document).ready(function(){
+    
+
+	$('#account_list').DataTable( {
+	    sAjaxSource: '/getAccount'
+	} );
+});
+
+</script>
+
+
+
+</html>
