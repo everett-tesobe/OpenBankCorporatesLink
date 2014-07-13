@@ -3,12 +3,11 @@
 // npm install cookie-parser
 // npm install oauth
 // npm install jsonfile
+// npm install follow-redirects
 
 
 var openCorp = require('./openCorp');
 var fs = require('fs');
-
-
 
 var http = require('http');
 var express = require('express');
@@ -24,14 +23,6 @@ var _openbankConsumerKey = "";
 var _openbankConsumerSecret = "";
 
 var consumer = null;
-
-
-
-
-
-
-
-
 
 
 
@@ -116,9 +107,6 @@ app.get('/searchBank', function(req, res){
 	
 });
 	
-
-
-
 
 
 app.get('/accountList', function(req, res){
