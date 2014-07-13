@@ -4,10 +4,12 @@
 // npm install oauth
 // npm install jsonfile
 // npm install follow-redirects
+// npm install sqlite3 --save
 
 
 var openCorp = require('./openCorp');
 var openToken = require('./oauthToken');
+var db = require('./sqlite');
 var fs = require('fs');
 
 var http = require('http');
@@ -17,6 +19,7 @@ var cookieParser = require('cookie-parser')
 var util = require('util');
 var oauth = require('oauth');
 var jf = require('jsonfile');
+var sqlite3 = require("sqlite3")
 
 var app = express();
 
@@ -89,6 +92,10 @@ app.get('/getAccount', function(req, res){
     
       var counterparties = parsedData.transactions.map(function(t) {
         var result = {
+          time: t.details.completed,
+          amount: t.details.value.amount,
+          currency: t.details.value.currency,
+          type: t.details.type,
           name: t.other_account.holder.name,
           url: t.other_account.metadata.open_corporates_URL,
           jurisdiction: t.other_account.bank.national_identifier,
@@ -121,7 +128,18 @@ app.get('/searchBank', function(req, res){
   
 });
   
+app.get('/saveUrl', function(req, res){
+	var url_parts = url.parse(req.url, true);
+	db.save_suggestion(fs, sqlite3, url_parts.query["name"], url_parts.query["url"])
+  res.send('Ok');
+});
 
+app.get('/getUrl', function(req, res){
+	var url_parts = url.parse(req.url, true);
+	db.get_suggestion(fs, sqlite3, url_parts.query["name"], function(result){
+    res.send(result);
+  });
+});
 
 app.get('/accountList', function(req, res){
   var sendResponse = function(){
@@ -143,10 +161,69 @@ app.get('/accountList', function(req, res){
 
 });
 
-app.get('/', function(req, res){
-  res.redirect('/connect');
+// write into Open Corporte URL Field
+app.get('/writeOCURLField', function(req, res){	
+  
+  	// if (request.method != 'POST') 
+  	// 	return;
+
+	// TODO: get this from the req!
+	var ACCOUNT_ID = "main";
+	var VIEW_ID = "owner";
+	var OTHER_ACCOUNT_ID = "52ef858cca8aa4fe2d46d3c9";
+	var queryUrl = "http://google.com";
+
+	// get post reqest data 
+	// ACCOUNT_ID = req.body.ACCOUNT_ID;
+	// VIEW_ID = req.body.VIEW_ID;
+	// OTHER_ACCOUNT_ID = req.body.OTHER_ACCOUNT_ID;
+	// queryUrl = req.body.queryUrl;
+
+
+	//var body = "{'open_corporates_URL':'" + queryUrl +"'}";
+	var body = JSON.stringify({"open_corporates_URL": queryUrl});
+
+	// An object of options to indicate where to post to
+	// var post_options = {
+	//   host: 'https://apisandbox.openbankproject.com',
+	//   port: '80',
+	//   path: '/banks/rbs/accounts/main/owner/other_accounts/52ef858cca8aa4fe2d46d3c9/metadata/open_corporates_url',
+	//   method: 'POST',
+	//   headers: {
+	//       'Content-Type': 'application/json',
+	//       'Content-Length': body.length
+	//   }
+	// };
+
+
+	// Set up the request
+	
+
+	//var url = 'https://apisandbox.openbankproject.com/banks/rbs/accounts/main/owner/other_accounts/52ef858cca8aa4fe2d46d3c9/open_corporates_url';
+	var url = 'https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/' + 
+				ACCOUNT_ID + 
+				'/' + 
+				VIEW_ID + 
+				'/other_accounts/' + 
+				OTHER_ACCOUNT_ID +
+				'/open_corporates_url';
+
+
+	consumer.post(url, 
+				 req.session.oauthAccessToken, 
+				 req.session.oauthAccessTokenSecret, 
+				 body, 
+				 'application/json; charset=utf-8', 
+				 function(error,data, response) {
+					res.send(data);
+				});
 });
  
+app.get('*', function(req, res){
+  res.redirect('/connect');
+});
+
+
 app.listen(8080);
 
 
