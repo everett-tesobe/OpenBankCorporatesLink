@@ -92,6 +92,10 @@ app.get('/getAccount', function(req, res){
     
       var counterparties = parsedData.transactions.map(function(t) {
         var result = {
+          time: t.details.completed,
+          amount: t.details.value.amount,
+          currency: t.details.value.currency,
+          type: t.details.type,
           name: t.other_account.holder.name,
           url: t.other_account.metadata.open_corporates_URL,
           jurisdiction: t.other_account.bank.national_identifier,
