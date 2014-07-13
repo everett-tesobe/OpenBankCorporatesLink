@@ -4,10 +4,12 @@
 // npm install oauth
 // npm install jsonfile
 // npm install follow-redirects
+// npm install sqlite3 --save
 
 
 var openCorp = require('./openCorp');
 var openToken = require('./oauthToken');
+var db = require('./sqlite');
 var fs = require('fs');
 
 var http = require('http');
@@ -17,6 +19,7 @@ var cookieParser = require('cookie-parser')
 var util = require('util');
 var oauth = require('oauth');
 var jf = require('jsonfile');
+var sqlite3 = require("sqlite3")
 
 var app = express();
 
@@ -49,53 +52,57 @@ app.use(cookieParser());
 app.use(session({ secret: "very secret" }));
 
 app.get('/connect', function(req, res){
-	consumer.getOAuthRequestToken(function(error, oauthToken, oauthTokenSecret, results){
+  consumer.getOAuthRequestToken(function(error, oauthToken, oauthTokenSecret, results){
     if (error) {
-			res.send("Error getting OAuth request token : " + util.inspect(error), 500);
-		} else {
-			req.session.oauthRequestToken = oauthToken;
-			req.session.oauthRequestTokenSecret = oauthTokenSecret;
-			res.redirect("https://apisandbox.openbankproject.com/oauth/authorize?oauth_token="+req.session.oauthRequestToken);
-		}
-	});
+      res.send("Error getting OAuth request token : " + util.inspect(error), 500);
+    } else {
+      req.session.oauthRequestToken = oauthToken;
+      req.session.oauthRequestTokenSecret = oauthTokenSecret;
+      res.redirect("https://apisandbox.openbankproject.com/oauth/authorize?oauth_token="+req.session.oauthRequestToken);
+    }
+  });
 });
 
 
 app.get('/callback', function(req, res){
-	consumer.getOAuthAccessToken(req.session.oauthRequestToken, req.session.oauthRequestTokenSecret, req.query.oauth_verifier, function(error, oauthAccessToken, oauthAccessTokenSecret, results) {
-		if (error) {
-			res.send("Error getting OAuth access token : " + util.inspect(error) + "["+oauthAccessToken+"]"+ "["+oauthAccessTokenSecret+"]"+ "["+util.inspect(results)+"]", 500);
-		} else {
-			req.session.oauthAccessToken = oauthAccessToken;
-			req.session.oauthAccessTokenSecret = oauthAccessTokenSecret;
+  consumer.getOAuthAccessToken(req.session.oauthRequestToken, req.session.oauthRequestTokenSecret, req.query.oauth_verifier, function(error, oauthAccessToken, oauthAccessTokenSecret, results) {
+    if (error) {
+      res.send("Error getting OAuth access token : " + util.inspect(error) + "["+oauthAccessToken+"]"+ "["+oauthAccessTokenSecret+"]"+ "["+util.inspect(results)+"]", 500);
+    } else {
+      req.session.oauthAccessToken = oauthAccessToken;
+      req.session.oauthAccessTokenSecret = oauthAccessTokenSecret;
       
       openToken.saveToken(jf, oauthAccessToken, oauthAccessTokenSecret);
        
-			res.redirect('/signed_in');
-		}
-	});
+      res.redirect('/signed_in');
+    }
+  });
 });
 
 
 app.get('/signed_in', function(req, res){
-	res.send('Thank you for logging in! <br><a href="/getAccount">Account transactions</a>')
+  res.send('Thank you for logging in! <br><a href="/getAccount">Account transactions</a>')
 });
 
 app.get('/getAccount', function(req, res){
 
   var sendResponse = function(){
     consumer.get("https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/main/owner/transactions", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
-    	var parsedData = JSON.parse(data);
+      var parsedData = JSON.parse(data);
     
-    	var counterparties = parsedData.transactions.map(function(t) {
-    		var result = {
-    		  name: t.other_account.holder.name,
-    		  url: t.other_account.metadata.open_corporates_URL,
-    		  jurisdiction: t.other_account.bank.national_identifier,
+      var counterparties = parsedData.transactions.map(function(t) {
+        var result = {
+          time: t.details.completed,
+          amount: t.details.value.amount,
+          currency: t.details.value.currency,
+          type: t.details.type,
+          name: t.other_account.holder.name,
+          url: t.other_account.metadata.open_corporates_URL,
+          jurisdiction: t.other_account.bank.national_identifier,
         };
         return result;
-    	});
-    	res.send(counterparties)		
+      });
+      res.send(counterparties)    
     });
   };
 
@@ -111,28 +118,39 @@ app.get('/getAccount', function(req, res){
 var url = require('url');
 
 app.get('/searchBank', function(req, res){
-	var url_parts = url.parse(req.url, true);
-	var query = url_parts.query;
-	openCorp.search_bank(query['query'], function(result){
-		res.send(result);
-	}, function(error){
-		res.send(error);
-	});
-	
+  var url_parts = url.parse(req.url, true);
+  var query = url_parts.query;
+  openCorp.search_bank(query['query'], function(result){
+    res.send(result);
+  }, function(error){
+    res.send(error);
+  });
+  
 });
-	
+  
+app.get('/saveUrl', function(req, res){
+	var url_parts = url.parse(req.url, true);
+	db.save_suggestion(fs, sqlite3, url_parts.query["name"], url_parts.query["url"])
+  res.send('Ok');
+});
 
+app.get('/getUrl', function(req, res){
+	var url_parts = url.parse(req.url, true);
+	db.get_suggestion(fs, sqlite3, url_parts.query["name"], function(result){
+    res.send(result);
+  });
+});
 
 app.get('/accountList', function(req, res){
   var sendResponse = function(){
-  	fs.readFile('./webUI/list.html', function (err, html) {
+    fs.readFile('./webUI/list.html', function (err, html) {
       if (err) {
           throw err; 
       }       
       res.writeHeader(200, {"Content-Type": "text/html"});  
       res.write(html);  
       res.end();  
-  	 });
+     });
   }; 
 
   if (!req.session.oauthAccessToken){
@@ -206,7 +224,7 @@ app.get('/writeOCURLField', function(req, res){
 });
  
 app.get('*', function(req, res){
-	res.redirect('/connect');
+  res.redirect('/connect');
 });
 
 
