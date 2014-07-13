@@ -1,35 +1,112 @@
-<html>
-  <head>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/themes/smoothness/jquery-ui.css" />
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
+  <html>
+    <head>
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+      <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/themes/smoothness/jquery-ui.css" />
+      <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+      <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+      <style>
+        body {
+          font-family: 'Helvetica Neue';
+          font-weight: 200;
+          font-size: 13px;
+          width: 100%;
+        }
+
+        header#primary {
+          width: 100%;
+          height: 50px;
+          background-color:#eee;
+          position: relative;
+        }
+        #logo {
+          font-size: 32px;
+        }
+        .transaction {
+          margin-top: 5px;
+          text-decoration: underline;
+        }
+        #wrapper {
+          overflow: hidden;
+        }
+        #transactions {
+          float: left;
+          width: 400px;
+          text-align: left;
+          margin-right: 100px;
+        }
+        #candidates {
+          overflow: hidden;
+          width: 300px;
+          text-align: left;
+        }
+
+        .transaction-wrapper {
+          margin-top: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <header id="primary">
+        <span id="logo"> OpenBankCorporatesLink </span>
+      </header>
+      <div id="wrapper">
+        <div id="transactions">
+          <h1> Transactions </h1>
+        </div>
+        <div id="candidates">
+          <h1> Candidates </h1>
+          <div id="loading"><img src="/webUI/ajax-loader.gif"></div>
+          <div id="candidates-list">
+          </div>
+        </div>
+      </div>
+    </body>
+    <script>
+
+    $(document).ready(function(){
+
+      // get account list 
+      $.getJSON('/getAccount', function(data) {
+        var items = [];
+        $.each(data, function(i) {
+          var t = data[i];
+          items.push(
+            '<div class="transaction-wrapper"> <a href="#" class="transaction">' + t.name +  '</a></div>'
+            );
+        });
+        $('#transactions').append(items.join(' '));
+
+        // transaction click handler 
+        $('.transaction').click(function(e) {
+          var $this = $(this);
+          var name = $this.text().replace("'", "");
+          var req_url = '/searchBank?query=' + encodeURI(name);
+          $("#loading").show();
+          $.getJSON(req_url, function(data) {
+            $('#candidates-list').text('');
+            if (data.length == 0) {
+              $('#candidates-list').append('<h2> NO RESULTS </h2>')
+            }
+            else {
+              $.each(data, function(i) {
+                var candidate = data[i];
+                $('#candidates-list').append(
+                  '<p><a target="_blank" href="' + 
+                  candidate.uri + '">' + 
+                  candidate.name + '</a></p>'
+                  );
+              });  
+            $("#loading").hide();           
+            }
 
 
-    <link rel="stylesheet" href="//cdn.datatables.net/1.10.0/css/jquery.dataTables.css" />
-    <script src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
-  </head>
-  <body>  
-    <div id="transactions">
-      <ul id='transaction-list'>
-      </ul>
-    </div>
-
-  </body>
-
-  <script>
-  $(document).ready(function(){
-  	$.getJSON('/getAccount', function(data) {
-      var items = [];
-      $.each(data, function(i) {
-        var t = data[i];
-        items.push('<li>' + t.name + '</li>');
+          });
+        });
       });
-      $('#transaction-list').append(items.join(' '));
     });
-  });
-
-  </script>
+    </script>
 
 
 
-</html>
+  </html>
