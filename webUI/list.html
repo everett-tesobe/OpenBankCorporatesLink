@@ -22,7 +22,7 @@
       var items = [];
       $.each(data, function(i) {
         var t = data[i];
-        items.push('<li>' t.name + '</li>');
+        items.push('<li>' + t.name + '</li>');
       });
       $('#transaction-list').append(items.join(' '));
     });
