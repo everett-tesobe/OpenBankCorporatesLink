@@ -6,7 +6,7 @@
 // npm install follow-redirects
 // npm install sqlite3 --save
 
-
+var url = require('url');
 var openCorp = require('./openCorp');
 var openToken = require('./oauthToken');
 var db = require('./sqlite');
@@ -143,7 +143,7 @@ app.get('/getAccount', function(req, res){
 });
 
 
-var url = require('url');
+
 
 app.get('/searchBank', function(req, res){
   var url_parts = url.parse(req.url, true);
@@ -190,10 +190,12 @@ app.get('/accountList', function(req, res){
 });
 
 // write into Open Corporte URL Field
-app.post('/writeOCURLField', function(req, res){	
+app.get('/writeOCURLField', function(req, res){	
   
-  	if (req.method != 'POST') 
-  	 	return;
+  	// if (req.method != 'POST') 
+  	//  	return;
+
+  	//console.log(req);
 
 	// TODO: get this from the req!
 	var ACCOUNT_ID = "main";
@@ -201,15 +203,30 @@ app.post('/writeOCURLField', function(req, res){
 	var OTHER_ACCOUNT_ID = "52ef858cca8aa4fe2d46d3c9";
 	var queryUrl = "http://google.com";
 
+	
+
+	var parts = url.parse(req.url, true);
+	
+
+	console.log(parts.query);
+	
+	var obj = parts.query;
+
+	
+
+
+
 	// get post reqest data 
-	// ACCOUNT_ID = req.body.ACCOUNT_ID;
-	// VIEW_ID = req.body.VIEW_ID;
-	// OTHER_ACCOUNT_ID = req.body.OTHER_ACCOUNT_ID;
-	// queryUrl = req.body.queryUrl;
+	ACCOUNT_ID = obj.ACCOUNT_ID;
+	VIEW_ID = obj.VIEW_ID;
+	OTHER_ACCOUNT_ID = obj.OTHER_ACCOUNT_ID;
+	queryUrl = obj.queryUrl;
 
 
 	//var body = "{'open_corporates_URL':'" + queryUrl +"'}";
 	var body = JSON.stringify({"open_corporates_URL": queryUrl});
+
+
 
 	// An object of options to indicate where to post to
 	// var post_options = {
@@ -228,7 +245,7 @@ app.post('/writeOCURLField', function(req, res){
 	
 
 	//var url = 'https://apisandbox.openbankproject.com/banks/rbs/accounts/main/owner/other_accounts/52ef858cca8aa4fe2d46d3c9/open_corporates_url';
-	var url = 'https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/' + 
+	var url2 = 'https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/' + 
 				ACCOUNT_ID + 
 				'/' + 
 				VIEW_ID + 
@@ -237,7 +254,7 @@ app.post('/writeOCURLField', function(req, res){
 				'/open_corporates_url';
 
 
-	consumer.post(url, 
+	consumer.post(url2, 
 				 req.session.oauthAccessToken, 
 				 req.session.oauthAccessTokenSecret, 
 				 body, 

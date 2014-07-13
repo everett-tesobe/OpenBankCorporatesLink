@@ -51,8 +51,19 @@
         <span id="logo"> OpenBankCorporatesLink </span>
       </header>
       <div id="wrapper">
-        <div id="transactions">
+        <div>
           <h1> Transactions </h1>
+          <table id="transactions">
+            <tr>
+              <th>time</th>
+              <th>amount</th>
+              <th>currency</th>
+              <th>type</th>
+              <th>name</th>
+              <th>url</th>
+              <th>suggestion</th>
+            </tr>
+          </table>
         </div>
         <div id="candidates">
           <h1> Candidates </h1>
@@ -64,15 +75,21 @@
     </body>
     <script>
 
+
+
     $(document).ready(function(){
 
       // get account list 
       $.getJSON('/getAccount', function(data) {
         var items = [];
+        var alldata = []
         $.each(data, function(i) {
           var t = data[i];
+          alldata.push(t);
           items.push(
-            '<div class="transaction-wrapper"> <a href="#" class="transaction" other_id="'+t.id+'">' + t.name +  '</a></div>'
+
+            '<tr><td>'+ t.time +'</td><td>'+ t.amount +'</td><td>'+ t.currency+'</td><td>'+ t.type+'</td><td><a href="#" class="transaction" other_id="'+t.id+'">'+ t.name+'</a></td><td>'+ t.url+'</td><td>'+ (t.suggestion ? t.suggestion: "" )+'</td></tr>'
+
             );
         });
         $('#transactions').append(items.join(' '));
@@ -114,12 +131,7 @@
 
 					
 					
-					$.ajax({
-					    url: "/writeOCURLField",
-					    data: paramJSON,
-					    type: "POST",
-					    dataType: "application/json"
-					});
+					$.get("/writeOCURLField?ACCOUNT_ID=main&VIEW_ID=owner&OTHER_ACCOUNT_ID=" + encodeURIComponent($this.attr('other_id')) +"&queryUrl=" + encodeURIComponent(candidate.uri));
 
 					
 
