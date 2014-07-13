@@ -4,10 +4,12 @@
 // npm install oauth
 // npm install jsonfile
 // npm install follow-redirects
+// npm install sqlite3 --save
 
 
 var openCorp = require('./openCorp');
 var openToken = require('./oauthToken');
+var db = require('./sqlite');
 var fs = require('fs');
 
 var http = require('http');
@@ -17,6 +19,7 @@ var cookieParser = require('cookie-parser')
 var util = require('util');
 var oauth = require('oauth');
 var jf = require('jsonfile');
+var sqlite3 = require("sqlite3")
 
 var app = express();
 
@@ -121,7 +124,18 @@ app.get('/searchBank', function(req, res){
 	
 });
 	
+app.get('/saveUrl', function(req, res){
+	var url_parts = url.parse(req.url, true);
+	db.save_suggestion(fs, sqlite3, url_parts.query["name"], url_parts.query["url"])
+  res.send('Ok');
+});
 
+app.get('/getUrl', function(req, res){
+	var url_parts = url.parse(req.url, true);
+	db.get_suggestion(fs, sqlite3, url_parts.query["name"], function(result){
+    res.send(result);
+  });
+});
 
 app.get('/accountList', function(req, res){
   var sendResponse = function(){
