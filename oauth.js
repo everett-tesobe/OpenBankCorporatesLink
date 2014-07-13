@@ -80,6 +80,21 @@ app.get('/callback', function(req, res){
 });
 
 
+var after = function (count, f) {
+  var c = 0, results = [];
+  return function () {
+    switch (arguments.length) {
+      case 0: results.push(null); break;
+      case 1: results.push(arguments[0]); break;
+      default: results.push(Array.prototype.slice.call(arguments)); break;
+    }
+    if (++c === count) {
+      f.apply(this, results);
+    }
+  };
+};
+
+
 app.get('/signed_in', function(req, res){
   res.send('Thank you for logging in! <br><a href="/getAccount">Account transactions</a>')
 });
@@ -90,6 +105,13 @@ app.get('/getAccount', function(req, res){
     consumer.get("https://apisandbox.openbankproject.com/obp/v1.2.1/banks/rbs/accounts/main/owner/transactions", req.session.oauthAccessToken, req.session.oauthAccessTokenSecret, function (error, data, response) {
       var parsedData = JSON.parse(data);
     
+      var counterparties;
+    
+      var finished = after(parsedData.transactions.length, function () {
+        res.send(counterparties);
+      });
+      
+      
       var counterparties = parsedData.transactions.map(function(t) {
         var result = {
           time: t.details.completed,
@@ -100,9 +122,14 @@ app.get('/getAccount', function(req, res){
           url: t.other_account.metadata.open_corporates_URL,
           jurisdiction: t.other_account.bank.national_identifier,
         };
+        db.get_suggestion(fs, sqlite3, result.name, function(compUrl){
+          if (compUrl){
+            result.suggestion = compUrl;
+          };
+          finished();
+        });
         return result;
       });
-      res.send(counterparties)    
     });
   };
 

@@ -6,7 +6,6 @@ module.exports = {
   getDb: function(jf, sqlite3){
     var exists = jf.existsSync(this.filename);
     var db = new sqlite3.Database(this.filename);
-    console.log(exists);
     db.serialize(function() {
       if(!exists) {
         db.run("CREATE TABLE suggestions (name TEXT PRIMARY KEY, url TEXT)", function(e){
